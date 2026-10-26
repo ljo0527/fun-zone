@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="만들면서 노는 작은 프로젝트들의 모음. 오락·실험용이며 결제·광고·보장은 없습니다.">
+<title>fun-zone · 놀이 프로젝트 모음</title>
+<style>
+/* 색·글꼴 토큰은 일확천금(lotto-lab)의 site.css 에서 그대로 가져왔다. 웹폰트는 불러오지 않고 글꼴 목록의 대체 글꼴을 쓴다. */
+:root{--paper:#EEF0EB;--paper-2:#F7F8F5;--paper-3:#E4E7E0;--ink:#16302B;
+ --ink-60:rgba(22,48,43,.60);--ink-40:rgba(22,48,43,.40);--ink-30:rgba(22,48,43,.30);
+ --ink-12:rgba(22,48,43,.12);--ink-06:rgba(22,48,43,.06);
+ --b-yellow:#FBC400;--b-blue:#69C8F2;--b-red:#FF7272;--b-grey:#A0A6A2;--b-green:#B0D840;
+ --sig:#B0281A;--ok:#1F6F4A;--gutter:16px;--maxw:940px;
+ --f-mono:"Space Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+ --f-body:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--paper:#12181A;--paper-2:#182022;--paper-3:#1F2A2C;
+ --ink:#E6EDE9;--ink-60:rgba(230,237,233,.62);--ink-40:rgba(230,237,233,.40);--ink-30:rgba(230,237,233,.28);
+ --ink-12:rgba(230,237,233,.14);--ink-06:rgba(230,237,233,.06);--sig:#FF8A78;--ok:#7FD8A8;color-scheme:dark}}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--f-body)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:28px var(--gutter) 48px}
+header{border-bottom:1.5px solid var(--ink);padding-bottom:16px}
+.eyebrow{margin:0;font:700 12px/1 var(--f-mono);letter-spacing:.08em;color:var(--ink-60)}
+h1{margin:8px 0 6px;font-size:clamp(1.6rem,6vw,2.2rem);line-height:1.2;overflow-wrap:anywhere}
+.lead{margin:0;color:var(--ink-60)}
+.cards{list-style:none;margin:24px 0;padding:0;display:grid;gap:12px;
+ grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.card{min-width:0;display:flex;flex-direction:column;gap:8px;padding:16px;
+ background:var(--paper-2);border:1.5px solid var(--ink);border-radius:2px}
+.card h2{margin:0;font-size:1.25rem;line-height:1.3;overflow-wrap:anywhere}
+.card h2 a{color:inherit;text-decoration:none}
+.card h2 a::after{content:"";position:absolute;inset:0}
+.card.has-link{position:relative}
+.card.has-link:hover{background:var(--paper-3)}
+.card p{margin:0;overflow-wrap:anywhere}
+.card .desc{color:var(--ink-60);font-size:.95rem}
+.badge{align-self:flex-start;padding:2px 8px;border:1px solid var(--ink-30);border-radius:2px;
+ font:700 11px/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-60)}
+.badge.live{color:var(--ok);border-color:var(--ok)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.tags li{padding:1px 8px;background:var(--ink-06);border-radius:2px;font-size:.8rem;color:var(--ink-60)}
+.open{margin-top:auto;padding-top:4px;font:700 13px var(--f-mono);color:var(--ink)}
+.card.todo{background:transparent;border-style:dashed;border-color:var(--ink-40);color:var(--ink-60)}
+.card.todo h2{font-size:1.05rem;font-weight:600}
+a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.card h2 a:focus-visible{outline-offset:6px}
+footer{border-top:1px solid var(--ink-12);padding-top:14px;font-size:.85rem;color:var(--ink-60)}
+footer a{color:inherit}
+footer p{margin:0 0 4px;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">FUN-ZONE</p>
+    <h1>놀이 프로젝트 모음</h1>
+    <p class="lead">만들면서 노는 작은 프로젝트들입니다. 카드를 누르면 각 프로젝트로 이동합니다.</p>
+  </header>
+
+  <ul id="cards" class="cards" aria-label="프로젝트 목록"></ul>
+  <noscript><p>자바스크립트를 켜면 카드 목록이 보입니다. 지금은 <a href="https://ljo0527.github.io/lotto-lab/">일확천금</a>이 있습니다.</p></noscript>
+
+  <footer>
+    <p>오락·실험용 모음입니다. 결제·광고·당첨 보장은 없습니다.</p>
+    <p><a href="https://github.com/ljo0527/fun-zone" rel="noopener noreferrer">소스 저장소</a></p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  // 내장 목록: projects.json 을 읽지 못할 때 쓴다. projects.json 의 "projects" 와 같은 내용으로 유지한다.
+  var FALLBACK = [
+    {
+      "id": "lotto-lab",
+      "title": "일확천금",
+      "desc": "로또 6/45·연금복권720+ 전 회차 통계 실험실. 오락·실험용이며 당첨을 보장하지 않습니다.",
+      "url": "https://ljo0527.github.io/lotto-lab/",
+      "tags": ["통계", "로또", "연금복권"],
+      "status": "운영 중"
+    }
+  ];
+
+  var list = document.getElementById("cards");
+  var shown = "";
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  // https 주소와 같은 출처의 상대 주소만 링크로 쓴다(javascript: 같은 주소 차단).
+  function safeUrl(u) {
+    if (typeof u !== "string") return null;
+    try {
+      var x = new URL(u, location.href);
+      var sameOrigin = (x.protocol === "https:" || x.protocol === "http:") && x.origin === location.origin;
+      return x.protocol === "https:" || sameOrigin ? x.href : null;
+    } catch (e) { return null; }
+  }
+
+  function normalize(data) {
+    var arr = data && Array.isArray(data.projects) ? data.projects : [];
+    return arr.filter(function (p) {
+      return p && typeof p === "object" && typeof p.title === "string" && p.title.trim() !== "";
+    });
+  }
+
+  function card(p) {
+    var href = safeUrl(p.url);
+    var li = el("li", "card" + (href ? " has-link" : ""));
+    if (p.status) li.appendChild(el("span", "badge" + (p.status === "운영 중" ? " live" : ""), String(p.status)));
+    var h2 = el("h2");
+    if (href) {
+      var a = el("a", null, p.title);
+      a.href = href;
+      a.rel = "noopener noreferrer";
+      h2.appendChild(a);
+    } else {
+      h2.textContent = p.title;
+    }
+    li.appendChild(h2);
+    if (p.desc) li.appendChild(el("p", "desc", String(p.desc)));
+    if (Array.isArray(p.tags) && p.tags.length) {
+      var ul = el("ul", "tags");
+      p.tags.forEach(function (t) { ul.appendChild(el("li", null, String(t))); });
+      li.appendChild(ul);
+    }
+    if (href) li.appendChild(el("span", "open", "열기 →"));
+    return li;
+  }
+
+  function placeholder() {
+    var li = el("li", "card todo");
+    li.appendChild(el("span", "badge", "추가 예정"));
+    li.appendChild(el("h2", null, "다음 프로젝트"));
+    li.appendChild(el("p", "desc", "새 놀이가 생기면 이 자리에 카드가 추가됩니다."));
+    return li;
+  }
+
+  function render(projects) {
+    var key = JSON.stringify(projects);
+    if (key === shown) return;
+    shown = key;
+    list.textContent = "";
+    projects.forEach(function (p) { list.appendChild(card(p)); });
+    list.appendChild(placeholder());
+  }
+
+  render(FALLBACK);
+
+  if (typeof fetch === "function") {
+    fetch("projects.json", { cache: "no-cache" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (d) { var p = normalize(d); if (p.length) render(p); })
+      .catch(function () { /* 읽기 실패: 내장 목록을 그대로 둔다 */ });
+  }
+})();
+</script>
+</body>
+</html>
